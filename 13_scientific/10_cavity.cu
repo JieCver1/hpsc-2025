@@ -134,19 +134,28 @@ int main() {
         cudaDeviceSynchronize();
 
         if (n % 10 == 0) {
-            for (int j = 0; j < ny; ++j) {
-                for (int i = 0; i < nx; ++i) ufile << u[j * nx + i] << " ";
-                ufile << "\n";
-            }
-            for (int j = 0; j < ny; ++j) {
-                for (int i = 0; i < nx; ++i) vfile << v[j * nx + i] << " ";
-                vfile << "\n";
-            }
-            for (int j = 0; j < ny; ++j) {
-                for (int i = 0; i < nx; ++i) pfile << p[j * nx + i] << " ";
-                pfile << "\n";
-            }
-        }
+    		for (int j = 0; j < ny; ++j) {
+        		for (int i = 0; i < nx; ++i) {
+            			ufile << u[j * nx + i] << " ";
+        		}
+    		}
+    		ufile << "\n";
+
+    		for (int j = 0; j < ny; ++j) {
+        		for (int i = 0; i < nx; ++i) {
+            	vfile << v[j * nx + i] << " ";
+        		}
+    		}
+    		vfile << "\n";
+
+    		for (int j = 0; j < ny; ++j) {
+        		for (int i = 0; i < nx; ++i) {
+            	pfile << p[j * nx + i] << " ";
+        		}
+    		}
+    		pfile << "\n";
+	}
+
     }
 
     cudaFree(u);
