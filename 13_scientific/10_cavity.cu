@@ -43,12 +43,12 @@ __global__ void update_uv_matrix(float *u, float *v, float *un, float *vn, float
                     nu * dt / (dx * dx) * (un[j * nx + (i + 1)] - 2.0f * un[j * nx + i] + un[j * nx + (i - 1)]) +
                     nu * dt / (dy * dy) * (un[(j + 1) * nx + i] - 2.0f * un[j * nx + i] + un[(j - 1) * nx + i]);
 
-        v[j * nx + i] = vn[j * nx + i] - un[j * nx + i] * dt / dx * (vn[j * nx + i] - vn[j * nx + (i - 1)]) -
-                    vn[j * nx + i] * dt / dy * (vn[j * nx + i] - vn[(j - 1) * nx + i]) -
-                    dt / (2.0f * rho * dx) * (p[(j + 1) * nx + i] - p[(j - 1) * nx + i]) +
-                    nu * dt / (dx * dx) * (vn[j * nx + (i + 1)] - 2.0f * vn[j * nx + i] + vn[j * nx + (i - 1)]) +
-                    nu * dt / (dy * dy) * (vn[(j + 1) * nx + i] - 2.0f * vn[j * nx + i] + vn[(j - 1) * nx + i]);
-    }
+        v[j * nx + i] = vn[j * nx + i]
+                      - un[j * nx + i] * dt / dx * (vn[j * nx + i] - vn[j * nx + i - 1])
+                      - vn[j * nx + i] * dt / dy * (vn[j * nx + i] - vn[(j - 1) * nx + i])
+                      - dt / (2.0f * rho * dy) * (p[(j + 1) * nx + i] - p[(j - 1) * nx + i])
+                      + nu * dt / (dx * dx) * (vn[j * nx + i + 1] - 2.0f * vn[j * nx + i] + vn[j * nx + i - 1])
+                      + nu * dt / (dy * dy) * (vn[(j + 1) * nx + i] - 2.0f * vn[j * nx + i] + vn[(j - 1) * nx + i]);}
 }
 
 __global__ void set_p_boundaries(float* p, int nx, int ny) {
