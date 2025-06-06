@@ -10,13 +10,14 @@ __global__ void compute_b_matrix(float *b, float *u, float *v, float dx, float d
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     if (i > 0 && i < nx - 1 && j > 0 && j < ny - 1) {
-        b[j * nx + i] = rho * (1.0f / dt *
-                         ((u[j * nx + (i + 1)] - u[j * nx + (i - 1)]) / (2.0f * dx) +
-                          (v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2.0f * dy)) -
-                         powf((u[j * nx + (i + 1)] - u[j * nx + (i - 1)]) / (2.0f * dx), 2) -
-                         2.0f * ((u[(j + 1) * nx + i] - u[(j - 1) * nx + i]) / (2.0f * dy) *
-                                 (v[j * nx + (i + 1)] - v[j * nx + (i - 1)]) / (2.0f * dx)) -
-                         powf((v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2.0f * dy), 2));
+        b[j * nx + i] = rho * (1.0f / dt * ((u[j * nx + (i + 1)] - u[j * nx + (i - 1)]) / (2.0f * dx) +
+                                        (v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2.0f * dy)) -
+                           ((u[j * nx + (i + 1)] - u[j * nx + (i - 1)]) / (2.0f * dx)) *
+                           ((u[j * nx + (i + 1)] - u[j * nx + (i - 1)]) / (2.0f * dx)) -
+                           2.0f * ((u[(j + 1) * nx + i] - u[(j - 1) * nx + i]) / (2.0f * dy) *
+                                   (v[j * nx + (i + 1)] - v[j * nx + (i - 1)]) / (2.0f * dx)) -
+                           ((v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2.0f * dy)) *
+                           ((v[(j + 1) * nx + i] - v[(j - 1) * nx + i]) / (2.0f * dy)));
     }
 }
 
@@ -24,10 +25,10 @@ __global__ void compute_p_matrix(float *p, float *pn, float *b, float dx, float 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     if (i > 0 && i < nx - 1 && j > 0 && j < ny - 1) {
-        p[j * nx + i] = dy * dy * ((pn[j * nx + (i + 1)] + pn[j * nx + (i - 1)]) +
-                        dx * dx * (pn[(j + 1) * nx + i] + pn[(j - 1) * nx + i]) -
-                        b[j * nx + i] * dx * dx * dy * dy) /
-                        (2.0f * (dx * dx + dy * dy));
+        p[j * nx + i] = ((pn[j * nx + (i + 1)] + pn[j * nx + (i - 1)]) * dy * dy +
+                     (pn[(j + 1) * nx + i] + pn[(j - 1) * nx + i]) * dx * dx -
+                     b[j * nx + i] * dx * dx * dy * dy) /
+                    (2.0f * (dx * dx + dy * dy));
     }
 }
 
@@ -37,16 +38,16 @@ __global__ void update_uv_matrix(float *u, float *v, float *un, float *vn, float
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     if (i > 0 && i < nx - 1 && j > 0 && j < ny - 1) {
         u[j * nx + i] = un[j * nx + i] - un[j * nx + i] * dt / dx * (un[j * nx + i] - un[j * nx + (i - 1)]) -
-                        vn[j * nx + i] * dt / dy * (un[j * nx + i] - un[(j - 1) * nx + i]) -
-                        dt / (2.0f * rho * dx) * (p[j * nx + (i + 1)] - p[j * nx + (i - 1)]) +
-                        nu * dt / (dx * dx) * (un[j * nx + (i + 1)] - 2.0f * un[j * nx + i] + un[j * nx + (i - 1)]) +
-                        nu * dt / (dy * dy) * (un[(j + 1) * nx + i] - 2.0f * un[j * nx + i] + un[(j - 1) * nx + i]);
+                    vn[j * nx + i] * dt / dy * (un[j * nx + i] - un[(j - 1) * nx + i]) -
+                    dt / (2.0f * rho * dx) * (p[j * nx + (i + 1)] - p[j * nx + (i - 1)]) +
+                    nu * dt / (dx * dx) * (un[j * nx + (i + 1)] - 2.0f * un[j * nx + i] + un[j * nx + (i - 1)]) +
+                    nu * dt / (dy * dy) * (un[(j + 1) * nx + i] - 2.0f * un[j * nx + i] + un[(j - 1) * nx + i]);
 
         v[j * nx + i] = vn[j * nx + i] - un[j * nx + i] * dt / dx * (vn[j * nx + i] - vn[j * nx + (i - 1)]) -
-                        vn[j * nx + i] * dt / dy * (vn[j * nx + i] - vn[(j - 1) * nx + i]) -
-                        dt / (2.0f * rho * dy) * (p[(j + 1) * nx + i] - p[(j - 1) * nx + i]) +
-                        nu * dt / (dx * dx) * (vn[j * nx + (i + 1)] - 2.0f * vn[j * nx + i] + vn[j * nx + (i - 1)]) +
-                        nu * dt / (dy * dy) * (vn[(j + 1) * nx + i] - 2.0f * vn[j * nx + i] + vn[(j - 1) * nx + i]);
+                    vn[j * nx + i] * dt / dy * (vn[j * nx + i] - vn[(j - 1) * nx + i]) -
+                    dt / (2.0f * rho * dx) * (p[(j + 1) * nx + i] - p[(j - 1) * nx + i]) +
+                    nu * dt / (dx * dx) * (vn[j * nx + (i + 1)] - 2.0f * vn[j * nx + i] + vn[j * nx + (i - 1)]) +
+                    nu * dt / (dy * dy) * (vn[(j + 1) * nx + i] - 2.0f * vn[j * nx + i] + vn[(j - 1) * nx + i]);
     }
 }
 
